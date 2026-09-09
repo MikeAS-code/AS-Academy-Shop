@@ -22,23 +22,13 @@ def login(navegador, username, password):
     )
     button_submit.click()
 
-    time.sleep(5)
+    time.sleep(2)
 
 
 def get_products(navegador):
 
     products = []
     
-    button_products = WebDriverWait(navegador, 10).until(
-        EC.element_to_be_clickable(
-            (By.XPATH, '//a[@href="/productos"]')
-        )
-    )
-
-    button_products.click()
-
-    time.sleep(5)
-
     html_products = navegador.page_source
 
     tree = html.fromstring(html_products)
@@ -159,6 +149,49 @@ def cargar_reviews(navegador):
         boton_cerrar_modal.click()
         time.sleep(2)
 
+def get_total_pages(navegador):
+
+    elemento = WebDriverWait(navegador, 10).until(
+        EC.presence_of_element_located(
+            (
+                By.XPATH,
+                '//div[starts-with(normalize-space(.), "Página")]'
+            )
+        )
+    )
+
+    texto = elemento.text
+
+    print("Texto encontrado:", texto)
+
+    total_paginas = int(texto.split("de")[-1].strip())
+
+    return total_paginas
+
+
+def next_page(navegador):
+
+    boton_siguiente = WebDriverWait(navegador, 10).until(
+        EC.element_to_be_clickable(
+            (By.XPATH, '//button[@data-testid="pagination-next"]')
+        )
+    )
+
+    boton_siguiente.click()
+
+    time.sleep(2)
+
+def go_to_products(navegador):
+
+    button_products = WebDriverWait(navegador, 10).until(
+        EC.element_to_be_clickable(
+            (By.XPATH, '//a[@href="/productos"]')
+        )
+    )
+
+    button_products.click()
+
+    time.sleep(5)
 
 
 if __name__ == "__main__":
@@ -172,10 +205,30 @@ if __name__ == "__main__":
 
     login(navegador.get_driver(), config.USERNAME, config.PASSWORD)
 
-    products = get_products(navegador.get_driver())
-    ##print(f"Total products found: {len(products)}")
-    ##print("Products:", products)
-    cargar_reviews(navegador.get_driver())
+    go_to_products(navegador.get_driver())
+
+    total_paginas = get_total_pages(navegador.get_driver())
+
+    print(f"Total de páginas: {total_paginas}")
+
+    products = []
+
+    for pagina in range(total_paginas):
+
+        print(f"Procesando página {pagina + 1} de {total_paginas}")
+
+        nuevos_productos = get_products(navegador.get_driver())
+
+        products.extend(nuevos_productos)
+
+        cargar_reviews(navegador.get_driver())
+
+        if pagina < total_paginas - 1:
+            next_page(navegador.get_driver())
+
+    print(f"Total products found: {len(products)}")
+
+    ##Aqui va el procesamiento de los productos, como guardarlos en un archivo o base de datos
 
 
     print("End crawler")
