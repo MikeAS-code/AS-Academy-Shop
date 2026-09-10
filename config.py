@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+NAME_CRAWLER = 'AS-Academy-Shop'
+
 URL_BASE = 'https://as-academy-shop.vercel.app/'
 
 USERNAME = os.getenv('APP_USERNAME')
